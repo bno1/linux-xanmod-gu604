@@ -12,7 +12,7 @@
 ## Default is: 0 => generic
 ## Good option if your package is for one machine: 98 (Intel native) or 99 (AMD native)
 if [ -z ${_microarchitecture+x} ]; then
-  _microarchitecture=0
+  _microarchitecture=98
 fi
 
 ## Disable NUMA since most users do not have multiple processors. Breaks CUDA/NvEnc.
@@ -49,7 +49,7 @@ fi
 
 # Compress modules with ZSTD (to save disk space)
 if [ -z ${_compress_modules+x} ]; then
-  _compress_modules=n
+  _compress_modules=y
 fi
 
 # Compile ONLY used modules to VASTLY reduce the number of modules built
