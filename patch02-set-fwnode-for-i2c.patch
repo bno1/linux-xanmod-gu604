@@ -1,0 +1,13 @@
+# Source: https://www.spinics.net/lists/platform-driver-x86/msg35829.html
+diff --git a/drivers/platform/x86/serial-multi-instantiate.c b/drivers/platform/x86/serial-multi-instantiate.c
+index 5362f1a7b77c..15ef2f3c442e 100644
+--- a/drivers/platform/x86/serial-multi-instantiate.c
++++ b/drivers/platform/x86/serial-multi-instantiate.c
+@@ -194,6 +194,7 @@ static int smi_i2c_probe(struct platform_device *pdev, struct smi *smi,
+ 		strscpy(board_info.type, inst_array[i].type, I2C_NAME_SIZE);
+ 		snprintf(name, sizeof(name), "%s-%s.%d", dev_name(dev), inst_array[i].type, i);
+ 		board_info.dev_name = name;
++		board_info.fwnode = acpi_fwnode_handle(adev);
+ 
+ 		ret = smi_get_irq(pdev, adev, &inst_array[i]);
+ 		if (ret < 0)

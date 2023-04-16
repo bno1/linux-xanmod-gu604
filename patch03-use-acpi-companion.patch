@@ -1,0 +1,152 @@
+# Source: https://www.spinics.net/lists/platform-driver-x86/msg35828.html
+diff --git a/sound/pci/hda/cs35l41_hda.c b/sound/pci/hda/cs35l41_hda.c
+index e5f0549bf06d..50cbbcce4946 100644
+--- a/sound/pci/hda/cs35l41_hda.c
++++ b/sound/pci/hda/cs35l41_hda.c
+@@ -1214,16 +1214,15 @@ static int cs35l41_get_speaker_id(struct device *dev, int amp_index,
+  * And devm functions expect that the device requesting the resource has the correct
+  * fwnode.
+  */
+-static int cs35l41_no_acpi_dsd(struct cs35l41_hda *cs35l41, struct device *physdev, int id,
+-			       const char *hid)
++static int cs35l41_no_acpi_dsd(struct cs35l41_hda *cs35l41, int id, const char *hid)
+ {
+ 	struct cs35l41_hw_cfg *hw_cfg = &cs35l41->hw_cfg;
+ 
+ 	/* check I2C address to assign the index */
+ 	cs35l41->index = id == 0x40 ? 0 : 1;
+ 	cs35l41->channel_index = 0;
+-	cs35l41->reset_gpio = gpiod_get_index(physdev, NULL, 0, GPIOD_OUT_HIGH);
+-	cs35l41->speaker_id = cs35l41_get_speaker_id(physdev, 0, 0, 2);
++	cs35l41->reset_gpio = gpiod_get_index(cs35l41->dev, NULL, 0, GPIOD_OUT_HIGH);
++	cs35l41->speaker_id = cs35l41_get_speaker_id(cs35l41->dev, 0, 0, 2);
+ 	hw_cfg->spk_pos = cs35l41->index;
+ 	hw_cfg->gpio2.func = CS35L41_INTERRUPT;
+ 	hw_cfg->gpio2.valid = true;
+@@ -1255,39 +1254,36 @@ static int cs35l41_hda_read_acpi(struct cs35l41_hda *cs35l41, const char *hid, i
+ 	struct cs35l41_hw_cfg *hw_cfg = &cs35l41->hw_cfg;
+ 	u32 values[HDA_MAX_COMPONENTS];
+ 	struct acpi_device *adev;
+-	struct device *physdev;
++
+ 	const char *sub;
+ 	char *property;
+ 	size_t nval;
+ 	int i, ret;
+ 
+-	adev = acpi_dev_get_first_match_dev(hid, NULL, -1);
++	adev = ACPI_COMPANION(cs35l41->dev);
+ 	if (!adev) {
+-		dev_err(cs35l41->dev, "Failed to find an ACPI device for %s\n", hid);
++		dev_err(cs35l41->dev, "Failed to find an ACPI device for %s\n",
++			dev_name(cs35l41->dev));
+ 		return -ENODEV;
+ 	}
+ 
+-	physdev = get_device(acpi_get_first_physical_node(adev));
+-	acpi_dev_put(adev);
+-
+-	sub = acpi_get_subsystem_id(ACPI_HANDLE(physdev));
++	sub = acpi_get_subsystem_id(ACPI_HANDLE(cs35l41->dev));
+ 	if (IS_ERR(sub))
+ 		sub = NULL;
+ 	cs35l41->acpi_subsystem_id = sub;
+ 
+ 	property = "cirrus,dev-index";
+-	ret = device_property_count_u32(physdev, property);
+-	if (ret <= 0) {
+-		ret = cs35l41_no_acpi_dsd(cs35l41, physdev, id, hid);
+-		goto err_put_physdev;
+-	}
++	ret = device_property_count_u32(cs35l41->dev, property);
++	if (ret <= 0)
++		return cs35l41_no_acpi_dsd(cs35l41, id, hid);
++
+ 	if (ret > ARRAY_SIZE(values)) {
+ 		ret = -EINVAL;
+ 		goto err;
+ 	}
+ 	nval = ret;
+ 
+-	ret = device_property_read_u32_array(physdev, property, values, nval);
++	ret = device_property_read_u32_array(cs35l41->dev, property, values, nval);
+ 	if (ret)
+ 		goto err;
+ 
+@@ -1307,11 +1303,10 @@ static int cs35l41_hda_read_acpi(struct cs35l41_hda *cs35l41, const char *hid, i
+ 	/* To use the same release code for all laptop variants we can't use devm_ version of
+ 	 * gpiod_get here, as CLSA010* don't have a fully functional bios with an _DSD node
+ 	 */
+-	cs35l41->reset_gpio = fwnode_gpiod_get_index(acpi_fwnode_handle(adev), "reset", cs35l41->index,
+-						     GPIOD_OUT_LOW, "cs35l41-reset");
++	cs35l41->reset_gpio = gpiod_get_index(cs35l41->dev, "reset", cs35l41->index, GPIOD_OUT_LOW);
+ 
+ 	property = "cirrus,speaker-position";
+-	ret = device_property_read_u32_array(physdev, property, values, nval);
++	ret = device_property_read_u32_array(cs35l41->dev, property, values, nval);
+ 	if (ret)
+ 		goto err;
+ 	hw_cfg->spk_pos = values[cs35l41->index];
+@@ -1322,41 +1317,41 @@ static int cs35l41_hda_read_acpi(struct cs35l41_hda *cs35l41, const char *hid, i
+ 			cs35l41->channel_index++;
+ 
+ 	property = "cirrus,gpio1-func";
+-	ret = device_property_read_u32_array(physdev, property, values, nval);
++	ret = device_property_read_u32_array(cs35l41->dev, property, values, nval);
+ 	if (ret)
+ 		goto err;
+ 	hw_cfg->gpio1.func = values[cs35l41->index];
+ 	hw_cfg->gpio1.valid = true;
+ 
+ 	property = "cirrus,gpio2-func";
+-	ret = device_property_read_u32_array(physdev, property, values, nval);
++	ret = device_property_read_u32_array(cs35l41->dev, property, values, nval);
+ 	if (ret)
+ 		goto err;
+ 	hw_cfg->gpio2.func = values[cs35l41->index];
+ 	hw_cfg->gpio2.valid = true;
+ 
+ 	property = "cirrus,boost-peak-milliamp";
+-	ret = device_property_read_u32_array(physdev, property, values, nval);
++	ret = device_property_read_u32_array(cs35l41->dev, property, values, nval);
+ 	if (ret == 0)
+ 		hw_cfg->bst_ipk = values[cs35l41->index];
+ 	else
+ 		hw_cfg->bst_ipk = -1;
+ 
+ 	property = "cirrus,boost-ind-nanohenry";
+-	ret = device_property_read_u32_array(physdev, property, values, nval);
++	ret = device_property_read_u32_array(cs35l41->dev, property, values, nval);
+ 	if (ret == 0)
+ 		hw_cfg->bst_ind = values[cs35l41->index];
+ 	else
+ 		hw_cfg->bst_ind = -1;
+ 
+ 	property = "cirrus,boost-cap-microfarad";
+-	ret = device_property_read_u32_array(physdev, property, values, nval);
++	ret = device_property_read_u32_array(cs35l41->dev, property, values, nval);
+ 	if (ret == 0)
+ 		hw_cfg->bst_cap = values[cs35l41->index];
+ 	else
+ 		hw_cfg->bst_cap = -1;
+ 
+-	cs35l41->speaker_id = cs35l41_get_speaker_id(physdev, cs35l41->index, nval, -1);
++	cs35l41->speaker_id = cs35l41_get_speaker_id(cs35l41->dev, cs35l41->index, nval, -1);
+ 
+ 	if (hw_cfg->bst_ind > 0 || hw_cfg->bst_cap > 0 || hw_cfg->bst_ipk > 0)
+ 		hw_cfg->bst_type = CS35L41_INT_BOOST;
+@@ -1364,14 +1359,11 @@ static int cs35l41_hda_read_acpi(struct cs35l41_hda *cs35l41, const char *hid, i
+ 		hw_cfg->bst_type = CS35L41_EXT_BOOST;
+ 
+ 	hw_cfg->valid = true;
+-	put_device(physdev);
+ 
+ 	return 0;
+ 
+ err:
+ 	dev_err(cs35l41->dev, "Failed property %s: %d\n", property, ret);
+-err_put_physdev:
+-	put_device(physdev);
+ 
+ 	return ret;
+ }

@@ -1,0 +1,14 @@
+# Source: https://superuser.com/questions/1719920/no-sound-from-internal-speakers-on-laptop-but-headphone-jack-and-hdmi-works/1754954#1754954
+--- a/sound/pci/hda/cs35l41_hda.c	2023-04-16 18:10:17.288812203 +0300
++++ b/sound/pci/hda/cs35l41_hda.c	2023-04-16 18:11:07.150759656 +0300
+@@ -1244,6 +1244,10 @@
+ 		hw_cfg->bst_type = CS35L41_EXT_BOOST;
+ 		hw_cfg->gpio1.func = CS35l41_VSPK_SWITCH;
+ 		hw_cfg->gpio1.valid = true;
++	} else if (strncmp(hid, "CSC3551", 7) == 0) {
++		hw_cfg->bst_type = CS35L41_INT_BOOST;
++		hw_cfg->gpio1.func = CS35l41_VSPK_SWITCH;
++		hw_cfg->gpio1.valid = true;
+ 	} else {
+ 		/*
+ 		 * Note: CLSA010(0/1) are special cases which use a slightly different design.
