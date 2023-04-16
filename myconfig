@@ -1,0 +1,47 @@
+# Disable some modules to cut down on compilation time and package size
+scripts/config --disable CONFIG_DRM_RADEON
+scripts/config --disable CONFIG_DRM_AMDGPU
+scripts/config --disable CONFIG_DRM_NOUVEAU
+scripts/config --disable CONFIG_B44
+scripts/config --disable CONFIG_BCMGENET
+scripts/config --disable CONFIG_TIGON3
+scripts/config --disable CONFIG_BNX2X
+scripts/config --disable CONFIG_SYSTEMPORT
+scripts/config --disable CONFIG_BNXT
+scripts/config --disable CONFIG_MLX4_EN
+scripts/config --disable CONFIG_MLX4_DEBUG
+scripts/config --disable CONFIG_MLX4_CORE_GEN2
+scripts/config --disable CONFIG_MLX5_CORE
+scripts/config --disable CONFIG_MLXSW_CORE
+scripts/config --disable CONFIG_MLXFW
+scripts/config --disable CONFIG_WLAN_VENDOR_BROADCOM
+scripts/config --disable CONFIG_SCSI_BNX2_ISCSI
+scripts/config --disable CONFIG_SCSI_BNX2X_FCOE
+scripts/config --disable CONFIG_CNIC
+scripts/config --disable CONFIG_BNX2
+scripts/config --disable CONFIG_CNIC
+scripts/config --disable CONFIG_NET_VENDOR_BROADCOM
+scripts/config --disable CONFIG_INFINIBAND
+scripts/config --disable CONFIG_NET_VENDOR_MELLANOX
+scripts/config --disable CONFIG_HABANA_AI
+scripts/config --disable CONFIG_SCSI_CXGB3_ISCSI
+scripts/config --disable CONFIG_SCSI_CXGB4_ISCSI
+scripts/config --disable CONFIG_SCSI_QLA_FC
+scripts/config --disable CONFIG_ISCSI_TARGET_CXGB4
+scripts/config --disable CONFIG_NET_VENDOR_CHELSIO
+scripts/config --disable CONFIG_NET_VENDOR_QLOGIC
+scripts/config --disable CONFIG_SND_SOC_INTEL_BYTCR_WM5102_MACH
+scripts/config --disable CONFIG_INTEL_ATOMISP
+scripts/config --disable CONFIG_PCMCIA_WL3501
+scripts/config --disable CONFIG_PCMCIA_RAYCS
+scripts/config --disable CONFIG_IWL3945
+scripts/config --disable CONFIG_IWL4965
+scripts/config --disable CONFIG_IPW2200
+scripts/config --disable CONFIG_IPW2100
+scripts/config --enable CONFIG_BTREE
+
+# asusctl/supergfxctl VFIO compatibility
+scripts/config  --module CONFIG_VFIO \
+                --module CONFIG_VFIO_VIRQFD \
+                --disable CONFIG_VFIO_NOIOMMU \
+                --module CONFIG_VFIO_PCI
