@@ -2,7 +2,7 @@
 
 ## Sound fixes
 
-- This laptop comes with a Cirrus amplifier which needs some ACPI tables that are not present in the BIOS. See `acpi/` for instructions.
+- This laptop comes with a Cirrus amplifier which needs some ACPI tables that are not present in the BIOS. Patches 03 and 04 add **EXPERIMENTAL** in-kernel hacks to configure the amp properly. Alternatively, you can add the missing ACPI tables to the bootloader, see `acpi/` for instructions.
 - Patch 01 contains fixes for ALSA:
     - Fixes subwoofer volume not being adjustable
     - Fixes Headset mic not being detected
