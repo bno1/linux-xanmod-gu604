@@ -114,6 +114,15 @@ sha256sums=('8fa0588f0c2ceca44cac77a0e39ba48c9f00a6b9dc69761c02a5d3efac8da7f3'
             'a91550fc14f7f747b00c8dcf5a9ef74365d6d01ced230b5c84fddd354258dd3d'
             '5c84bfe7c1971354cff3f6b3f52bf33e7bbeec22f85d5e7bfde383b54c679d30')
 
+# Add GU604V patches
+source+=(
+    'patch01_gu604v_alsa_quirks.patch'
+)
+
+sha256sums+=(
+    'SKIP'
+)
+
 export KBUILD_BUILD_HOST=${KBUILD_BUILD_HOST:-archlinux}
 export KBUILD_BUILD_USER=${KBUILD_BUILD_USER:-makepkg}
 export KBUILD_BUILD_TIMESTAMP=${KBUILD_BUILD_TIMESTAMP:-$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH})}
