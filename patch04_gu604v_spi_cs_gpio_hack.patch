@@ -1,0 +1,59 @@
+--- a/drivers/platform/x86/asus-nb-wmi.c	2023-02-20 00:24:22.000000000 +0200
++++ b/drivers/platform/x86/asus-nb-wmi.c	2023-04-26 19:40:10.791233776 +0300
+@@ -15,6 +15,7 @@
+ #include <linux/fb.h>
+ #include <linux/dmi.h>
+ #include <linux/i8042.h>
++#include <linux/gpio/machine.h>
+ 
+ #include "asus-wmi.h"
+ 
+@@ -125,6 +126,20 @@
+ 	.wmi_ignore_fan = true,
+ };
+ 
++static struct gpiod_lookup_table gu604v_spi_cs_gpio_table = {
++	.dev_id = "spi1",
++	.table = {
++		// Native CS
++		// Use index -1 to cause devm_gpiod_get_index_optional to return NULL
++		// when looking up the index 0 GPIO. This is necessary to cause
++		// spi_get_gpio_descs to identify this CS native.
++		GPIO_LOOKUP_IDX("", 0, "cs", -1, GPIO_ACTIVE_HIGH),
++		// GPIO CS
++		GPIO_LOOKUP_IDX("INTC1055:00", 0x0142, "cs", 1, GPIO_ACTIVE_HIGH),
++		{ }
++	},
++};
++
+ static int dmi_matched(const struct dmi_system_id *dmi)
+ {
+ 	pr_info("Identified laptop model '%s'\n", dmi->ident);
+@@ -132,6 +147,13 @@
+ 	return 1;
+ }
+ 
++static int gu604v_add_gpio_table(const struct dmi_system_id *dmi)
++{
++	pr_info("Identified laptop model '%s'\n", dmi->ident);
++	gpiod_add_lookup_table(&gu604v_spi_cs_gpio_table);
++	return 1;
++}
++
+ static const struct dmi_system_id asus_quirks[] = {
+ 	{
+ 		.callback = dmi_matched,
+@@ -486,6 +508,14 @@
+ 		},
+ 		.driver_data = &quirk_asus_ignore_fan,
+ 	},
++	{
++		.callback = gu604v_add_gpio_table,
++		.ident = "ASUSTeK COMPUTER INC. GU604V",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "ASUSTeK COMPUTER INC."),
++			DMI_MATCH(DMI_PRODUCT_NAME, "GU604V"),
++		},
++	},
+ 	{},
+ };

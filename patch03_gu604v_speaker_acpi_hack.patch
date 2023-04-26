@@ -1,0 +1,81 @@
+ 
+--- a/sound/pci/hda/cs35l41_hda.c	2023-04-26 01:06:43.489067072 +0300
++++ b/sound/pci/hda/cs35l41_hda.c	2023-04-26 19:35:11.244578590 +0300
+@@ -91,6 +91,22 @@
+ 	{ CS35L41_AMP_DIG_VOL_CTRL,	0x0000A678 }, // AMP_VOL_PCM Mute
+ };
+ 
++static const struct acpi_gpio_params gu604v_reset_gpio[] = {
++	{ 1, 0, 0 },
++	{ 1, 0, 0 },
++};
++
++static const struct acpi_gpio_params gu604v_spk_id_gpio[] = {
++	{ 2, 0, 0 },
++	{ 2, 0, 0 },
++};
++
++static const struct acpi_gpio_mapping asus_gu604v_acpi_gpios[] = {
++	{ "reset-gpios", gu604v_reset_gpio, 2 },
++	{ "spk-id-gpios", gu604v_spk_id_gpio, 2 },
++	{}
++};
++
+ static void cs35l41_add_controls(struct cs35l41_hda *cs35l41)
+ {
+ 	struct hda_cs_dsp_ctl_info info;
+@@ -1215,6 +1231,36 @@
+ 	return speaker_id;
+ }
+ 
++static int asus_gu604v_no_acpi(struct cs35l41_hda *cs35l41,
++			       struct device *physdev, int id, const char *hid)
++{
++	struct cs35l41_hw_cfg *hw_cfg = &cs35l41->hw_cfg;
++	int ret;
++
++	ret = devm_acpi_dev_add_driver_gpios(physdev, asus_gu604v_acpi_gpios);
++	if (ret) {
++		dev_err(cs35l41->dev,
++			"Failed to add driver GPIOs for Asus GU604V for %s\n", hid);
++		return ret;
++	}
++
++	cs35l41->index = id;
++	cs35l41->channel_index = 0;
++	cs35l41->reset_gpio = gpiod_get_index(physdev, "reset", cs35l41->index,
++					      GPIOD_OUT_LOW);
++	cs35l41->speaker_id =
++		cs35l41_get_speaker_id(physdev, cs35l41->index, 2, -1);
++	hw_cfg->spk_pos = cs35l41->index;
++	hw_cfg->gpio1.func = CS35l41_VSPK_SWITCH;
++	hw_cfg->gpio1.valid = true;
++	hw_cfg->gpio2.func = CS35L41_INTERRUPT;
++	hw_cfg->gpio2.valid = true;
++	hw_cfg->bst_type = CS35L41_EXT_BOOST;
++	hw_cfg->valid = true;
++
++	return 0;
++}
++
+ /*
+  * Device CLSA010(0/1) doesn't have _DSD so a gpiod_get by the label reset won't work.
+  * And devices created by serial-multi-instantiate don't have their device struct
+@@ -1227,6 +1273,16 @@
+ {
+ 	struct cs35l41_hw_cfg *hw_cfg = &cs35l41->hw_cfg;
+ 
++	bool is_asus_gu604v = false;
++
++	if (cs35l41->acpi_subsystem_id) {
++		is_asus_gu604v = strcmp(cs35l41->acpi_subsystem_id, "10431473") == 0;
++	}
++
++	if (is_asus_gu604v && strncmp(hid, "CSC3551", 7) == 0) {
++		return asus_gu604v_no_acpi(cs35l41, physdev, id, hid);
++	}
++
+ 	/* check I2C address to assign the index */
+ 	cs35l41->index = id == 0x40 ? 0 : 1;
+ 	cs35l41->channel_index = 0;
+
