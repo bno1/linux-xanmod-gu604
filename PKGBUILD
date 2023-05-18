@@ -116,8 +116,8 @@ sha256sums=('8fa0588f0c2ceca44cac77a0e39ba48c9f00a6b9dc69761c02a5d3efac8da7f3'
 
 # Add GU604V patches
 source+=(
-    'patch01_gu604v_alsa_quirks.patch'
-    'patch02_gu604v_wmi_keys.patch'
+    '0001-ALSA-hda-realtek-Add-quirks-for-ASUS-GU604V-and-GU60.patch'
+    '0002-platform-x86-asus-wmi-Ignore-WMI-events-with-codes-0.patch'
 )
 
 sha256sums+=(
