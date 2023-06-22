@@ -123,11 +123,9 @@ sha256sums=('d926a06c63dd8ac7df3f86ee1ffc2ce2a3b81a2d168484e76b5b389aba8e56d0'
 
 # Add GU604V patches
 source+=(
-    '0002-platform-x86-asus-wmi-Ignore-WMI-events-with-codes-0.patch'
 )
 
 sha256sums+=(
-    'SKIP'
 )
 
 export KBUILD_BUILD_HOST=${KBUILD_BUILD_HOST:-archlinux}
